@@ -1,0 +1,104 @@
+
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+.wrapper { background: var(--color-background-primary); border-radius: var(--border-radius-lg); border: 0.5px solid var(--color-border-tertiary); overflow: hidden; max-width: 480px; margin: 0 auto; }
+.header { background: #2a0f00; padding: 1.5rem 1.25rem 1rem; }
+.header h1 { color: #fff; font-size: 26px; font-weight: 500; letter-spacing: 2px; }
+.header p { color: #e8a020; font-size: 13px; margin-top: 4px; font-style: italic; }
+.section-title { font-size: 12px; font-weight: 500; color: var(--color-text-secondary); text-transform: uppercase; letter-spacing: 0.08em; margin: 1.25rem 0 0.5rem; padding: 0 1.25rem; }
+.item-card { display: flex; align-items: center; justify-content: space-between; padding: 12px 1.25rem; border-bottom: 0.5px solid var(--color-border-tertiary); gap: 12px; }
+.item-info { flex: 1; min-width: 0; }
+.item-name { font-size: 14px; font-weight: 500; color: var(--color-text-primary); }
+.item-desc { font-size: 11px; color: var(--color-text-secondary); margin-top: 2px; line-height: 1.5; }
+.item-price { font-size: 13px; font-weight: 500; color: #c46c00; margin-top: 4px; }
+.item-controls { display: flex; align-items: center; gap: 6px; flex-shrink: 0; }
+.btn-qty { width: 28px; height: 28px; border-radius: 50%; border: 0.5px solid var(--color-border-secondary); background: var(--color-background-primary); color: var(--color-text-primary); font-size: 16px; cursor: pointer; display: flex; align-items: center; justify-content: center; }
+.btn-qty:hover { background: var(--color-background-secondary); }
+.qty-display { font-size: 14px; font-weight: 500; min-width: 16px; text-align: center; color: var(--color-text-primary); }
+.cart-bar { background: #2a0f00; padding: 1rem 1.25rem; display: flex; align-items: center; justify-content: space-between; cursor: pointer; }
+.cart-bar:hover { background: #3d1800; }
+.cart-label { color: #fff; font-size: 15px; font-weight: 500; }
+.cart-total { color: #e8a020; font-size: 15px; font-weight: 500; }
+.badge { background: #e8a020; color: #2a0f00; border-radius: 999px; padding: 2px 8px; font-size: 12px; font-weight: 500; margin-left: 8px; }
+</style>
+
+<div class="wrapper">
+  <div class="header">
+    <h1>Sukita's Burguer</h1>
+    <p>hamburguer 100% artesanal</p>
+  </div>
+  <div id="menu"></div>
+  <div class="cart-bar" onclick="enviarPedido()">
+    <span class="cart-label">Ver pedido <span class="badge" id="cart-count">0</span></span>
+    <span class="cart-total" id="cart-total">R$ 0,00</span>
+  </div>
+</div>
+
+<script>
+const items = [
+  { id: 1, name: "X Burguer", desc: "Pão, hambúrguer, queijo cheddar, cebola caramelizada e molho especial", price: 22 },
+  { id: 2, name: "X Burguer Duplo", desc: "Pão, 2 hambúrgueres, queijo cheddar, cebola caramelizada e molho especial", price: 30 },
+  { id: 3, name: "X Salada", desc: "Pão, hambúrguer, queijo cheddar, cebola caramelizada, alface, tomate e molho especial salada", price: 28 },
+  { id: 4, name: "X Salada Egg", desc: "Pão, hambúrguer, 2 ovos, queijo cheddar, cebola caramelizada, alface, tomate e molho especial salada", price: 30 },
+  { id: 5, name: "X Bacon", desc: "Pão, hambúrguer, bacon, queijo cheddar, cebola caramelizada, alface, tomate, picles e molho especial bacon", price: 30 },
+  { id: 6, name: "X Tudo", desc: "Pão, 2 hambúrgueres, queijo cheddar, bacon, 2 ovos, cebola caramelizada, picles, alface, tomate e molho especial", price: 40 },
+  { id: 7, name: "X Picanha", desc: "Pão, hambúrguer 100g, queijo cheddar, bacon, cebola caramelizada, picles, alface, tomate e molho especial", price: 40 },
+  { id: 8, name: "Piscina de Cheddar e Bacon", desc: "Pão, hambúrguer, queijo cheddar, bacon, alface, tomate, cebola caramelizada e molho especial", price: 38 },
+];
+
+const qtys = {};
+items.forEach(i => qtys[i.id] = 0);
+
+function fmt(v) { return "R$ " + v.toFixed(2).replace(".", ","); }
+
+function render() {
+  const menu = document.getElementById("menu");
+  let html = '<div class="section-title">Hambúrgueres</div>';
+  items.forEach(item => {
+    html += `<div class="item-card">
+      <div class="item-info">
+        <div class="item-name">${item.name}</div>
+        <div class="item-desc">${item.desc}</div>
+        <div class="item-price">${fmt(item.price)}</div>
+      </div>
+      <div class="item-controls">
+        <button class="btn-qty" onclick="change(${item.id}, -1)">−</button>
+        <span class="qty-display" id="qty-${item.id}">0</span>
+        <button class="btn-qty" onclick="change(${item.id}, +1)">+</button>
+      </div>
+    </div>`;
+  });
+  menu.innerHTML = html;
+}
+
+function change(id, delta) {
+  qtys[id] = Math.max(0, qtys[id] + delta);
+  document.getElementById("qty-" + id).textContent = qtys[id];
+  updateCart();
+}
+
+function updateCart() {
+  let total = 0, count = 0;
+  items.forEach(i => { total += i.price * qtys[i.id]; count += qtys[i.id]; });
+  document.getElementById("cart-total").textContent = fmt(total);
+  document.getElementById("cart-count").textContent = count;
+}
+
+function enviarPedido() {
+  const pedido = items.filter(i => qtys[i.id] > 0);
+  if (pedido.length === 0) { alert("Adicione itens ao pedido primeiro!"); return; }
+  let total = 0;
+  let msg = "Olá! Gostaria de fazer um pedido:\n\n";
+  pedido.forEach(i => {
+    const sub = i.price * qtys[i.id];
+    total += sub;
+    msg += `• ${qtys[i.id]}x ${i.name} — ${fmt(sub)}\n`;
+  });
+  msg += `\n*Total: ${fmt(total)}*`;
+  const phone = "5517992823211";
+  const url = "https://wa.me/" + phone + "?text=" + encodeURIComponent(msg);
+  window.open(url, "_blank");
+}
+
+render();
+</script>
